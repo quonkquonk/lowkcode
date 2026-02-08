@@ -20,13 +20,16 @@ unsigned long nextCheck = 0;
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 DHT dht(25, DHT11);
 
-enum menus {main, graph, settings, interval, customInterval};
+enum menus {main, graph, settings, interval, customInterval, confirm};
 int currentMenu = main;
 int cursorPos = 0;
 bool cycleButtonLastState = false;
 bool enterButtonLastState = false;
 bool backButtonLastState = false;
 int lastMenu = graph;
+
+unsigned long dataSaveFreq = 600000;
+unsigned long selectedFreq = 0;
 
 
 
@@ -57,7 +60,7 @@ void setup() {
 
 void loop() {
 
-
+Serial.println(dataSaveFreq);
 
 
   switch (currentMenu)
@@ -72,6 +75,14 @@ void loop() {
 
     case graph:
       graphLoop();
+      break;
+
+    case interval:
+      intervalLoop();
+      break;
+
+    case confirm:
+      confirmLoop();
       break;
 
   }
@@ -343,16 +354,74 @@ void intervalLoop()
 }
 }
 
+void confirmLoop()
+{
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setCursor(0, 0);
+  display.setTextColor(WHITE);
+  display.println("Previous data will be cleared");
+  display.setTextSize(2);
+  display.println(" Continue?");
+  
+
+  switch (cursorPos)
+  {
+    case 0:
+      display.setTextSize(2);
+      
+
+      display.fillRect(0, 48, 64, 16, WHITE);
+      
+
+      display.setCursor(0, 48);
+      display.setTextColor(BLACK);
+      display.println(" Yes");
+
+      display.setCursor(86, 48);
+      display.setTextColor(WHITE);
+      display.println("No");
+
+      display.display();
+      break;
+
+    case 1:
+      display.setTextSize(2);
+      
+
+      display.fillRect(64, 48, 64, 16, WHITE);
+      
+
+      display.setCursor(0, 48);
+      display.setTextColor(WHITE);
+      display.println(" Yes");
+
+      display.setCursor(86, 48);
+      display.setTextColor(BLACK);
+      display.println("No");
+
+      display.display();
+      break;
+  }
+}
+
 void cyclePress()
 {
   switch (currentMenu)
   {
     case settings:
-      cursorPos = (cursorPos + 1) % 3;
+      cursorPos = ++cursorPos % 3;
       break;
 
     case interval:
-      cursorPos = (cursorPos + 1) % 4
+      cursorPos = ++cursorPos % 4;
+      break;
+
+      
+
+    case confirm:
+      cursorPos = ++cursorPos % 2;
+      break;
   }
 }
 
@@ -380,6 +449,49 @@ void enterPress()
           break;
       }
       break;
+
+    case interval:
+      switch (cursorPos)
+      {
+        case 0:
+          selectedFreq = 600000;
+          currentMenu = confirm;
+          break;
+
+        case 1:
+          selectedFreq = 1800000;
+          currentMenu = confirm;
+          break;
+
+        case 2:
+          selectedFreq = 3600000;
+          currentMenu = confirm;
+          break;
+
+        case 3:
+          currentMenu = customInterval;
+          break;
+      }
+      break;
+
+      case confirm:
+        
+          switch (cursorPos)
+          {
+            case 0:
+              dataSaveFreq = selectedFreq;
+              currentMenu = settings;
+              break;
+
+            case 1:
+              currentMenu = interval;
+              break;
+
+           
+          }
+          break;
+
+      
   }
 }
 
@@ -398,6 +510,18 @@ void backPress()
       display.println("loading...");
       display.display();
       break;
+
+    case graph:
+    case interval:
+
+      currentMenu = settings;
+      break;
+
+    case confirm:
+      currentMenu = interval;
+      break;
+
+    
   }
 }
 // lowk just checking if it worked lowk
