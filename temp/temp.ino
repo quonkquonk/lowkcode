@@ -20,7 +20,7 @@ unsigned long nextCheck = 0;
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 DHT dht(25, DHT11);
 
-enum menus {main, graph, settings};
+enum menus {main, graph, settings, interval, customInterval};
 int currentMenu = main;
 int cursorPos = 0;
 bool cycleButtonLastState = false;
@@ -68,6 +68,10 @@ void loop() {
 
     case settings:
       settingsLoop();
+      break;
+
+    case graph:
+      graphLoop();
       break;
 
   }
@@ -233,12 +237,122 @@ void settingsLoop()
 }
 }
 
+void graphLoop()
+{
+  display.clearDisplay();
+  display.setTextColor(WHITE);
+  display.setTextSize(1);
+  display.setCursor(0, 0);
+  display.println("[graph here]");
+  display.display();
+}
+
+void intervalLoop()
+{
+  switch (cursorPos)
+  {
+    case 0:
+      display.setTextSize(2);
+      display.clearDisplay();
+
+      display.fillRect(0, 0, 128, 16, WHITE);
+      
+
+      display.setCursor(0, 0);
+      display.setTextColor(BLACK);
+      display.println("10 min");
+
+      display.setCursor(0, 17);
+      display.setTextColor(WHITE);
+      display.println("30 min");
+
+      display.setCursor(0, 34);
+      display.setTextColor(WHITE);
+      display.println("1 hour");
+
+      display.display();
+      break;
+
+    case 1:
+      display.setTextSize(2);
+      display.clearDisplay();
+
+      display.fillRect(0, 17, 128, 16, WHITE);
+      
+
+      display.setCursor(0, 0);
+      display.setTextColor(WHITE);
+      display.println("10 min");
+
+      display.setCursor(0, 17);
+      display.setTextColor(BLACK);
+      display.println("30 min");
+
+      display.setCursor(0, 34);
+      display.setTextColor(WHITE);
+      display.println("1 hour");
+
+      display.display();
+      break;
+
+    case 2:
+      display.setTextSize(2);
+      display.clearDisplay();
+
+      display.fillRect(0, 34, 128, 16, WHITE);
+      
+
+      display.setCursor(0, 0);
+      display.setTextColor(WHITE);
+      display.println("10 min");
+
+      display.setCursor(0, 17);
+      display.setTextColor(WHITE);
+      display.println("30 min");
+
+      display.setCursor(0, 34);
+      display.setTextColor(BLACK);
+      display.println("1 hour");
+
+      display.display();
+      break;
+
+    case 3:
+      display.setTextSize(2);
+      display.clearDisplay();
+
+      display.fillRect(0, 34, 128, 16, WHITE);
+      
+
+      display.setCursor(0, 0);
+      display.setTextColor(WHITE);
+      display.println("30 min");
+
+      display.setCursor(0, 17);
+      display.setTextColor(WHITE);
+      display.println("1 hour");
+
+      display.setCursor(0, 34);
+      display.setTextColor(BLACK);
+      display.println("Custom");
+
+      display.display();
+      break;
+
+
+}
+}
+
 void cyclePress()
 {
   switch (currentMenu)
   {
     case settings:
       cursorPos = (cursorPos + 1) % 3;
+      break;
+
+    case interval:
+      cursorPos = (cursorPos + 1) % 4
   }
 }
 
@@ -248,6 +362,23 @@ void enterPress()
   {
     case main:
       currentMenu = settings;
+      break;
+
+    case settings:
+      switch (cursorPos)
+      {
+        case 0:
+          currentMenu = graph;
+          break;
+
+        case 1:
+          currentMenu = interval;
+          break;
+
+        case 2:
+          Serial.println("ill lowk add this later");
+          break;
+      }
       break;
   }
 }
