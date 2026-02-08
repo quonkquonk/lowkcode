@@ -26,10 +26,11 @@ int cursorPos = 0;
 bool cycleButtonLastState = false;
 bool enterButtonLastState = false;
 bool backButtonLastState = false;
-int lastMenu = graph;
+int lastMenu = customInterval;
 
 unsigned long dataSaveFreq = 600000;
 unsigned long selectedFreq = 0;
+unsigned long customIntervalValue = 10; // in minutes
 
 
 
@@ -102,6 +103,12 @@ Serial.println(dataSaveFreq);
     
   }
 
+  if (digitalRead(cycle) == 0 && currentMenu == customInterval)
+  {
+    customIntervalValue = constrain(++customIntervalValue, 1, 300);
+    delay(50);
+  }
+
   if (enterButtonLastState != digitalRead(enter))
   {
     if (enterButtonLastState == true)
@@ -123,7 +130,17 @@ Serial.println(dataSaveFreq);
     backButtonLastState = digitalRead(back);
     
   }
-  
+   if (digitalRead(back) == 0 && currentMenu == customInterval)
+  {
+    if (customIntervalValue != 1){
+    customIntervalValue = constrain(customIntervalValue--, 1, 300);
+    }
+    else
+    {
+      customIntervalValue = 1;
+    }
+    delay(50);
+  }
 
 
   if (currentMenu != lastMenu)
@@ -415,7 +432,26 @@ void customIntervalLoop()
   display.clearDisplay();
   display.setTextSize(2);
   display.setCursor(0, 0);
+  display.setTextColor(WHITE);
+
+
+if (customIntervalValue < 60)
+{
+  display.print(customIntervalValue);
+  display.println(" min");
+}
+else
+{ 
+  display.print((customIntervalValue - (customIntervalValue % 60)) / 60);
+  display.print("h ");
+  display.print(customIntervalValue % 60);
+  display.println("min");
+}
+  int barPercent = map(customIntervalValue, 0, 300, 0, 128);
+  display.fillRect(0, 50, barPercent, 20, WHITE);
+  display.display();
   
+
   
 }
 
@@ -484,6 +520,7 @@ void enterPress()
 
         case 3:
           currentMenu = customInterval;
+          
           break;
       }
       break;
@@ -504,6 +541,11 @@ void enterPress()
            
           }
           break;
+
+      case customInterval:
+        selectedFreq = customIntervalValue * 60000;
+        currentMenu = confirm;
+        break;
 
       
   }
