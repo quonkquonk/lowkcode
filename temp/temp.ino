@@ -85,6 +85,10 @@ Serial.println(dataSaveFreq);
       confirmLoop();
       break;
 
+    case customInterval:
+      customIntervalLoop();
+      break;
+
   }
 
   if (cycleButtonLastState != digitalRead(cycle))
@@ -403,6 +407,16 @@ void confirmLoop()
       display.display();
       break;
   }
+}
+
+
+void customIntervalLoop()
+{
+  display.clearDisplay();
+  display.setTextSize(2);
+  display.setCursor(0, 0);
+  
+  
 }
 
 void cyclePress()
