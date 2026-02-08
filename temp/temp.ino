@@ -20,7 +20,7 @@ unsigned long nextCheck = 0;
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 DHT dht(25, DHT11);
 
-enum menus {main, graph, settings, interval, customInterval, confirm};
+enum menus {main, graph, settings, interval, customInterval, confirm, off};
 int currentMenu = main;
 int cursorPos = 0;
 bool cycleButtonLastState = false;
@@ -88,6 +88,10 @@ Serial.println(dataSaveFreq);
 
     case customInterval:
       customIntervalLoop();
+      break;
+
+    case off:
+      offLoop();
       break;
 
   }
@@ -455,6 +459,23 @@ else
   
 }
 
+void offLoop()
+{
+  display.clearDisplay();
+  display.display();
+
+  if (digitalRead(cycle) == 0 || digitalRead(back) == 0 || digitalRead(enter) == 0)
+  {
+    currentMenu = main;
+    display.clearDisplay();
+    display.setTextSize(2);
+    display.setCursor(0, 0);
+    display.setTextColor(WHITE);
+    display.println("loading...");
+    display.display();
+  }
+}
+
 void cyclePress()
 {
   switch (currentMenu)
@@ -495,7 +516,8 @@ void enterPress()
           break;
 
         case 2:
-          Serial.println("ill lowk add this later");
+          currentMenu = off;
+          delay(200);
           break;
       }
       break;
