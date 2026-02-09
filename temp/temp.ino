@@ -28,11 +28,17 @@ bool enterButtonLastState = false;
 bool backButtonLastState = false;
 int lastMenu = customInterval;
 
-unsigned long dataSaveFreq = 600000;
+unsigned long dataSaveFreq = 5000;
 unsigned long selectedFreq = 0;
-unsigned long customIntervalValue = 10; // in minutes
+int customIntervalValue = 10; // in minutes
 
+unsigned long nextSave = 0;
 
+int plots[20];
+int plotsRecorded = 0;
+
+float h = 0;
+float t = 0;
 
 
 void setup() {
@@ -52,16 +58,20 @@ void setup() {
   pinMode(cycle, INPUT_PULLUP);
   pinMode(back, INPUT_PULLUP);
   pinMode(enter, INPUT_PULLUP);
-
- 
-
+  randomSeed(analogRead(32));
+ for (int i = 0; i < 20; i++)
+ {
+  plots[i] = -99;
+ }
+  
+  
 
   
 }
 
 void loop() {
 
-Serial.println(dataSaveFreq);
+Serial.println(t);
 
 
   switch (currentMenu)
@@ -93,6 +103,7 @@ Serial.println(dataSaveFreq);
     case off:
       offLoop();
       break;
+
 
   }
 
@@ -154,23 +165,53 @@ Serial.println(dataSaveFreq);
 
   }
   
- 
+ if (nextCheck < millis())
+  {
+  nextCheck = millis() + 2100;
+
+  
+  h = dht.readHumidity();
+  
+  t = dht.readTemperature();
+
+  
+  Serial.print(F("Humidity: "));
+  Serial.print(h);
+  Serial.print(F("%  Temperature: "));
+  Serial.print(t);
+  Serial.println(F("C "));
+
+  }
+
+  if (nextSave < millis())
+  {
+    nextSave = millis() + dataSaveFreq;
+
+    if (plotsRecorded < 20)
+    {
+      plots[plotsRecorded] = t;
+      plotsRecorded++;
+    }
+    else
+    {
+      for (int i = 0; i < 20; i++)
+      {
+        if (i != 19)
+        {
+          plots[i] = plots[i+1];
+        }
+        else
+        {
+          plots[i] = t;
+        }
+      }
+    }
+  }
 
 }
 
 void tempLoop()
 {
-
-
-  if (nextCheck < millis() && currentMenu == main)
-  {
-  nextCheck = millis() + 2100;
-
-  
-  float h = dht.readHumidity();
-  
-  float t = dht.readTemperature();
-
    if (isnan(h) || isnan(t)) {
     Serial.println(F("Failed to read from DHT sensor!"));
 
@@ -197,7 +238,7 @@ void tempLoop()
   display.println("Humidity: ");
   display.println(String(h) + "%");
   display.display();
-  }
+  
 }
 
 void settingsLoop()
@@ -275,11 +316,38 @@ void settingsLoop()
 
 void graphLoop()
 {
+  
   display.clearDisplay();
   display.setTextColor(WHITE);
   display.setTextSize(1);
   display.setCursor(0, 0);
-  display.println("[graph here]");
+  display.println("35C");
+  display.setCursor(0, 56);
+  display.println("5C");
+  
+
+  for (int i = 0; i < plotsRecorded; i++)
+  {
+    int plotYPos = map(plots[i], 5, 35, 64, 0);
+    int plotXPos = (i * 6) + 2;
+
+
+
+
+    if (plots[i + 1] == -99 || i == 19)
+    {
+      display.fillCircle(plotXPos, plotYPos, 2, WHITE);
+    }
+    if (i != 0)
+    {
+      int lastPlotYPos = map(plots[i-1], 5, 35, 64, 0);
+      int lastPlotXPos = ((i-1) * 6) + 2;
+
+      display.drawLine(lastPlotXPos, lastPlotYPos, plotXPos, plotYPos, WHITE);
+    }
+
+  }
+
   display.display();
 }
 
@@ -296,15 +364,15 @@ void intervalLoop()
 
       display.setCursor(0, 0);
       display.setTextColor(BLACK);
-      display.println("10 min");
+      display.println("5 sec");
 
       display.setCursor(0, 17);
       display.setTextColor(WHITE);
-      display.println("30 min");
+      display.println("10 min");
 
       display.setCursor(0, 34);
       display.setTextColor(WHITE);
-      display.println("1 hour");
+      display.println("30 min");
 
       display.display();
       break;
@@ -318,15 +386,15 @@ void intervalLoop()
 
       display.setCursor(0, 0);
       display.setTextColor(WHITE);
-      display.println("10 min");
+      display.println("5 sec");
 
       display.setCursor(0, 17);
       display.setTextColor(BLACK);
-      display.println("30 min");
+      display.println("10 min");
 
       display.setCursor(0, 34);
       display.setTextColor(WHITE);
-      display.println("1 hour");
+      display.println("30 min");
 
       display.display();
       break;
@@ -340,15 +408,15 @@ void intervalLoop()
 
       display.setCursor(0, 0);
       display.setTextColor(WHITE);
-      display.println("10 min");
+      display.println("5 sec");
 
       display.setCursor(0, 17);
       display.setTextColor(WHITE);
-      display.println("30 min");
+      display.println("10 min");
 
       display.setCursor(0, 34);
       display.setTextColor(BLACK);
-      display.println("1 hour");
+      display.println("30 min");
 
       display.display();
       break;
@@ -362,11 +430,11 @@ void intervalLoop()
 
       display.setCursor(0, 0);
       display.setTextColor(WHITE);
-      display.println("30 min");
+      display.println("10 min");
 
       display.setCursor(0, 17);
       display.setTextColor(WHITE);
-      display.println("1 hour");
+      display.println("30 min");
 
       display.setCursor(0, 34);
       display.setTextColor(BLACK);
@@ -526,17 +594,17 @@ void enterPress()
       switch (cursorPos)
       {
         case 0:
-          selectedFreq = 600000;
+          selectedFreq = 5000;
           currentMenu = confirm;
           break;
 
         case 1:
-          selectedFreq = 1800000;
+          selectedFreq = 600000;
           currentMenu = confirm;
           break;
 
         case 2:
-          selectedFreq = 3600000;
+          selectedFreq = 1800000;
           currentMenu = confirm;
           break;
 
@@ -554,6 +622,14 @@ void enterPress()
             case 0:
               dataSaveFreq = selectedFreq;
               currentMenu = settings;
+              for (int i = 0; i < 20; i++)
+              {
+                plots[i] = -99;
+
+
+              }
+              plotsRecorded = 0;
+              nextSave = 0;
               break;
 
             case 1:
