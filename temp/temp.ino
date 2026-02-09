@@ -34,7 +34,7 @@ int customIntervalValue = 10; // in minutes
 
 unsigned long nextSave = 0;
 
-int plots[20];
+float plots[20];
 int plotsRecorded = 0;
 
 float h = 0;
