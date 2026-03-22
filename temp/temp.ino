@@ -34,7 +34,11 @@ int customIntervalValue = 10; // in minutes
 
 unsigned long nextSave = 0;
 
+
+enum graphStates {tempMode, humiMode};
+int graphCurrentState = tempMode;
 float plots[20];
+float hPlots[0];
 int plotsRecorded = 0;
 
 float h = 0;
@@ -58,10 +62,11 @@ void setup() {
   pinMode(cycle, INPUT_PULLUP);
   pinMode(back, INPUT_PULLUP);
   pinMode(enter, INPUT_PULLUP);
-  randomSeed(analogRead(32));
+  
  for (int i = 0; i < 20; i++)
  {
   plots[i] = -99;
+  hPlots[i] = -99;
  }
   
   
@@ -324,6 +329,18 @@ void graphLoop()
   display.println("35C");
   display.setCursor(0, 56);
   display.println("5C");
+  display.setCursor(100, 0);
+
+
+  if (graphCurrentState == tempMode)
+  {
+    display.println("Temp");
+  }
+  else
+  {
+    display.println("Humi");
+  }
+
   
 
   for (int i = 0; i < plotsRecorded; i++)
@@ -507,21 +524,21 @@ void customIntervalLoop()
   display.setTextColor(WHITE);
 
 
-if (customIntervalValue < 60)
-{
-  display.print(customIntervalValue);
-  display.println(" min");
-}
-else
-{ 
-  display.print((customIntervalValue - (customIntervalValue % 60)) / 60);
-  display.print("h ");
-  display.print(customIntervalValue % 60);
-  display.println("min");
-}
-  int barPercent = map(customIntervalValue, 0, 300, 0, 128);
-  display.fillRect(0, 50, barPercent, 20, WHITE);
-  display.display();
+    if (customIntervalValue < 60)
+    {
+      display.print(customIntervalValue);
+      display.println(" min");
+    }
+    else
+    { 
+      display.print((customIntervalValue - (customIntervalValue % 60)) / 60);
+      display.print("h ");
+      display.print(customIntervalValue % 60);
+      display.println("min");
+    }
+      int barPercent = map(customIntervalValue, 0, 300, 0, 128);
+      display.fillRect(0, 50, barPercent, 20, WHITE);
+      display.display();
   
 
   
